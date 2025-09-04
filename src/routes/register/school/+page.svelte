@@ -202,7 +202,7 @@
           
           <div class="whatsapp-section">
             <h3>Join our WhatsApp Group</h3>
-            <a href={whatsappLink} target="_blank" class="whatsapp-btn">
+            <a href={"https://chat.whatsapp.com/CYVRwdONRZ0Grg1auRKe7C?mode=ems_wa_t"} target="_blank" class="whatsapp-btn">
               Join WhatsApp Group
             </a>
             <p class="whatsapp-note">
