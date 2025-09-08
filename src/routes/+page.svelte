@@ -1,42 +1,113 @@
 <script>
+  import Card from '../components/Card.svelte';
   import { goto } from '$app/navigation';
 
-  function handleSchoolRegistration() {
-    console.log('Navigating to school registration...');
-    goto('/register/school');
+  let showSplash = true;
+
+  // Hide splash after 1.5 sec
+  setTimeout(() => {
+    showSplash = false;
+  }, 1500);
+
+  // Teacher details
+  const teachers = [
+    {
+      name: "Arman Joshi",
+      qualification: "Bachelor of Technology (B.Tech, 3rd Year)",
+      experience: ""
+    },
+    {
+      name: "Ujjwal Tiwari",
+      qualification: "Bachelor of Commerce (Hons), Specialized in Business and Economics",
+      experience: ""
+    },
+    {
+      name: "Tushar Aggarwal",
+      qualification: "Master of Science in Chemistry",
+      experience: "2 years"
+    }
+  ];
+
+  // Navigation handlers
+  async function handleSchoolRegistration() {
+    try {
+      await goto('/register/school');
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
   }
 
-  function handleCollegeRegistration() {
-    console.log('Navigating to college registration...');
-    goto('/register/college');
+  async function handleCollegeRegistration() {
+    try {
+      await goto('/register/college');
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
   }
 </script>
 
-<div class="container">
-  <div class="button-group">
-    <h1>Choose Your Registration Type</h1>
-    <button 
-      class="registration-btn school-btn" 
-      on:click={handleSchoolRegistration}
-    >
-      Register as School Student
-    </button>
-    
-    <button 
-      class="registration-btn college-btn" 
-      on:click={handleCollegeRegistration}
-    >
-      Register as College Student
-    </button>
+{#if showSplash}
+  <!-- Splash screen -->
+  <div class="splash">
+    <img src="/logo/logo1.jpg" alt="Logo" />
   </div>
-</div>
+{:else}
+  <!-- Main content -->
+  <div class="container">
+    <div class="button-group">
+      <h1>Choose Your Registration Type</h1>
+      <button 
+        class="registration-btn school-btn" 
+        on:click={handleSchoolRegistration}
+      >
+        Register as School Student
+      </button>
+      
+      <button 
+        class="registration-btn college-btn" 
+        on:click={handleCollegeRegistration}
+      >
+        Register as College Student
+      </button>
+    </div>
+  </div>
+
+  <!-- Teachers section -->
+  <div class="main">
+    <h1>Meet Our Teachers</h1>
+    <div class="cards-section">
+      {#each teachers as teacher}
+        <Card 
+          name={teacher.name} 
+          qualification={teacher.qualification} 
+          experience={teacher.experience} 
+        />
+      {/each}
+    </div>
+  </div>
+{/if}
 
 <style>
+  /* Splash screen */
+  .splash {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: white;
+  }
+
+  .splash img {
+    max-width: 250px;
+    height: auto;
+  }
+
+  /* Registration container */
   .container {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    min-height: 60vh;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
@@ -96,5 +167,25 @@
 
   .registration-btn:active {
     transform: translateY(0);
+  }
+
+  /* Teachers section */
+  .main {
+    /* set the section background AND expose it as a variable for children */
+    --panel-bg: #f4f6f9;        /* 👈 define once */
+    background: var(--panel-bg);
+    padding: 2rem;
+  }
+
+  .main h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #111;
+  }
+
+  .cards-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
   }
 </style>

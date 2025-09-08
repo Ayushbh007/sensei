@@ -1,5 +1,7 @@
 <script>
   import { goto } from '$app/navigation';
+  import { emailjs } from '$lib/email';
+  import { onMount } from 'svelte';
 
   let formData = {
     name: '',
@@ -12,8 +14,16 @@
 
   let errors = {};
   let isSubmitting = false;
-  let isSubmitted = false; // ✅ new state for success screen
+  let isSubmitted = false;
+  let showConfirmationModal = false;
+  let confirmationData = {};
   let whatsappLink = "https://chat.whatsapp.com/XXXXXXXXXXX"; // ✅ replace with your actual group link
+
+  onMount(() => {
+    if (typeof window !== 'undefined') {
+      emailjs.init('xil_Yf0d6m5EfRPRv');
+    }
+  });
 
   function validateForm() {
     errors = {};
@@ -45,6 +55,95 @@
     }
     
     return Object.keys(errors).length === 0;
+  }
+
+  function handleFormSubmit(event) {
+    event.preventDefault();
+    
+    if (!validateForm()) return;
+    
+    // Collect form data for confirmation
+    confirmationData = {
+      name: formData.name,
+      class: formData.class,
+      board: formData.board,
+      subject: formData.subject,
+      parentsName: formData.parentsName,
+      parentsContact: formData.parentsContact
+    };
+    
+    // Show confirmation modal
+    showConfirmationModal = true;
+  }
+
+  async function sendEmail() {
+    try {
+      isSubmitting = true;
+      console.log('Starting email send process...');
+      
+      const templateParams = {
+        name: formData.name,
+        class: formData.class,
+        board: formData.board,
+        subject: formData.subject,
+        parentsName: formData.parentsName,
+        parentsContact: formData.parentsContact,
+        message_date: new Date().toLocaleDateString(),
+        reply_to: formData.parentsContact
+      };
+
+      console.log('Template params:', templateParams);
+      
+      const response = await emailjs.send(
+        'service_abc123',
+        'school_registration', // Create this template in EmailJS
+        templateParams,
+        'xil_Yf0d6m5EfRPRv'
+      );
+      
+      console.log('Email sent successfully:', response);
+      isSubmitted = true;
+      showConfirmationModal = false;
+      showSuccessScreen();
+      
+    } catch (error) {
+      console.error('Failed to send school registration email. Error details:', error);
+      alert('Registration failed. Please try again later.');
+      showConfirmationModal = false;
+      isSubmitting = false;
+    } finally {
+      isSubmitting = false;
+    }
+  }
+
+  async function confirmSubmission() {
+    try {
+      showConfirmationModal = false;
+      await sendEmail();
+    } catch (error) {
+      console.error('Submission failed:', error);
+      isSubmitting = false;
+      showConfirmationModal = false;
+    }
+  }
+
+  function closeConfirmationModal() {
+    showConfirmationModal = false;
+  }
+
+  function showSuccessScreen() {
+    isSubmitted = true;
+    isSubmitting = false;
+    
+    // Reset form
+    formData = {
+      name: '',
+      class: '',
+      board: '',
+      subject: '',
+      parentsName: '',
+      parentsContact: ''
+    };
   }
 
   async function handleSubmit() {
@@ -85,6 +184,52 @@
   <title>School Student Registration</title>
 </svelte:head>
 
+<!-- Success Screen and Confirmation Modal -->
+{#if showConfirmationModal}
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <svg xmlns="http://www.w3.org/2000/svg" class="modal-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h3>Confirm Registration</h3>
+      </div>
+      
+      <p class="modal-description">Please review the registration details before submitting:</p>
+      
+      <div class="confirmation-details">
+        <div class="detail-item">
+          <strong>Name:</strong> {confirmationData.name}
+        </div>
+        <div class="detail-item">
+          <strong>Class:</strong> {confirmationData.class}
+        </div>
+        <div class="detail-item">
+          <strong>Board:</strong> {confirmationData.board}
+        </div>
+        <div class="detail-item">
+          <strong>Subject:</strong> {confirmationData.subject}
+        </div>
+        <div class="detail-item">
+          <strong>Parent's Name:</strong> {confirmationData.parentsName}
+        </div>
+        <div class="detail-item">
+          <strong>Parent's Contact:</strong> {confirmationData.parentsContact}
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="cancel-btn" on:click={closeConfirmationModal}>
+          Cancel
+        </button>
+        <button class="confirm-btn" on:click={confirmSubmission} disabled={isSubmitting}>
+          {isSubmitting ? 'Submitting...' : 'Confirm & Submit'}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
 <div class="container">
   <div class="form-wrapper">
     <button class="back-btn" on:click={goBack}>← Back to Home</button>
@@ -93,7 +238,7 @@
       {#if !isSubmitted}
         <h1>School Student Registration</h1>
         
-        <form on:submit|preventDefault={handleSubmit}>
+        <form on:submit|preventDefault={handleFormSubmit}>
           <div class="form-group">
             <label for="name">Name *</label>
             <input
@@ -295,6 +440,220 @@
 
   input.error, select.error {
     border-color: #e74c3c;
+  }
+
+  .error-text {
+    color: #e74c3c;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 0.875rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .submit-btn:hover {
+    opacity: 0.9;
+  }
+
+  .submit-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+
+  /* Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    z-index: 1000;
+  }
+
+  .modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-icon {
+    width: 2rem;
+    height: 2rem;
+    color: #667eea;
+  }
+
+  .modal-description {
+    color: #4a5568;
+    margin-bottom: 1.5rem;
+  }
+
+  .confirmation-details {
+    background: #f7fafc;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+  }
+
+  .detail-item {
+    margin-bottom: 0.75rem;
+    color: #2d3748;
+  }
+
+  .detail-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+  }
+
+  .confirm-btn, .cancel-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .confirm-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+  }
+
+  .confirm-btn:hover {
+    opacity: 0.9;
+  }
+
+  .confirm-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+
+  .cancel-btn {
+    background: white;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+  }
+
+  .cancel-btn:hover {
+    background: #f7fafc;
+  }
+
+  /* Success Screen Styles */
+  .success-container {
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .success-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #48bb78;
+  }
+
+  h2 {
+    color: #2d3748;
+    margin-bottom: 1rem;
+  }
+
+  .success-message {
+    color: #4a5568;
+    margin: 1rem 0 2rem;
+  }
+
+  .whatsapp-section {
+    background: #f7fafc;
+    padding: 2rem;
+    border-radius: 12px;
+    margin: 2rem 0;
+  }
+
+  .whatsapp-section h3 {
+    color: #2d3748;
+    margin-bottom: 1rem;
+  }
+
+  .whatsapp-btn {
+    display: inline-block;
+    background: #25d366;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    text-decoration: none;
+    margin: 1rem 0;
+    transition: background 0.2s;
+  }
+
+  .whatsapp-btn:hover {
+    background: #128c7e;
+  }
+
+  .whatsapp-note {
+    color: #718096;
+    font-size: 0.875rem;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .primary-btn, .secondary-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .primary-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+  }
+
+  .primary-btn:hover {
+    opacity: 0.9;
+  }
+
+  .secondary-btn {
+    background: white;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+  }
+
+  .secondary-btn:hover {
+    background: #f7fafc;
   }
 
   .error-text {
