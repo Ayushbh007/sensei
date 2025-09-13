@@ -10,23 +10,23 @@
   }, 1500);
 
   // Teacher details
-  const teachers = [
-    {
-      name: "Arman Joshi",
-      qualification: "Bachelor of Technology (B.Tech, 3rd Year)",
-      experience: ""
-    },
-    {
-      name: "Ujjwal Tiwari",
-      qualification: "Bachelor of Commerce (Hons), Specialized in Business and Economics",
-      experience: ""
-    },
-    {
-      name: "Tushar Aggarwal",
-      qualification: "Master of Science in Chemistry",
-      experience: "2 years"
-    }
-  ];
+  const teachers = [  
+  {  
+    name: "Tushar Aggarwal",  
+    qualification: "Master of Science in Chemistry",  
+    experience: ""  
+  },  
+  {  
+    name: "Ujjwal Tiwari",  
+    qualification: "Bachelor of Commerce (Hons), Specialized in Business and Economics",  
+    experience: ""  
+  },  
+  {  
+    name: "Arman Joshi",  
+    qualification: "Bachelor of Technology",  
+    experience: ""  
+  }  
+];
 
   // Navigation handlers
   async function handleSchoolRegistration() {
@@ -49,7 +49,7 @@
 {#if showSplash}
   <!-- Splash screen -->
   <div class="splash">
-    <img src="/logo/logo1.jpg" alt="Logo" />
+    <img src="/logo/logo2.jpg" alt="Logo" />
   </div>
 {:else}
   <!-- Main content -->
